@@ -48,10 +48,10 @@ read -e -p "Chemin d'installation:" INSTALL_PATH
 if [[ ! -d $INSTALL_PATH ]]; then
 	mkdir -p $INSTALL_PATH
 	echo "dossier crée"
-#else
-#	INSTALL_PATH="$INSTALL_PATH/vimbadmin"
-#	echo "Chemin: $INSTALL_PATH"
-#	mkdir -p $INSTALL_PATH
+else
+	INSTALL_PATH="$INSTALL_PATH/vimbadmin"
+	echo "Chemin: $INSTALL_PATH"
+	mkdir -p $INSTALL_PATH
 fi
 
 export INSTALL_PATH=$INSTALL_PATH
@@ -150,7 +150,7 @@ replace "defaults.mailbox.password_salt     = \"\"" "defaults.mailbox.password_s
 read -p "Login (email): " LOGIN
 read -s -p "Mot de passe: " PASSWORD
 #On fini d'activer le vimbadmin 
-NULL=$(/usr/bin/curl  -s --data-urlencode "salt=$SECURITY_SALT" --data "username=$LOGIN&password=$PASSWORD" $(hostname -I | sed 's/ //g')/vimbadmin/auth/setup  -L 2>&1 /dev/null) #On fait -L pour suivre les redirection et on encode le salt pour eviter que les caracteres speciaux interferes dans la requete
+NULL=$(/usr/bin/curl --max-time 5 -s --data-urlencode "salt=$SECURITY_SALT" --data "username=$LOGIN&password=$PASSWORD" $(hostname -I | sed 's/ //g')/vimbadmin/auth/setup  -L 2>&1 /dev/null) #On fait -L pour suivre les redirection et on encode le salt pour eviter que les caracteres speciaux interferes dans la requete
 
 fi
 
@@ -345,10 +345,10 @@ read -e -p "Repertoire ou je dois copier Roundcube: " INSTALL_PATH_ROUNDCUBE
 if [[ ! -d $INSTALL_PATH_ROUNDCUBE ]]; then
 	mkdir -p $INSTALL_PATH_ROUNDCUBE
 	echo "dossier crée"
-#else
-#	INSTALL_PATH_ROUNDCUBE="$INSTALL_PATH_ROUNDCUBE/roundcube"
-#	echo "Chemin: $INSTALL_PATH_ROUNDCUBE"
-#	mkdir -p $INSTALL_PATH_ROUNCUBE
+else
+	INSTALL_PATH_ROUNDCUBE="$INSTALL_PATH_ROUNDCUBE/roundcube"
+	echo "Chemin: $INSTALL_PATH_ROUNDCUBE"
+	mkdir -p $INSTALL_PATH_ROUNCUBE
 fi
 cp roundcubemail-1.1.1/* $INSTALL_PATH_ROUNDCUBE/ -R
 
