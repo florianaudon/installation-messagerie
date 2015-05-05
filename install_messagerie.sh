@@ -17,7 +17,7 @@ echo '
 
 echo "Installation des dependances (mysql/apache/php/curl/dovecot/postfix/git)"
 
-read -s -p "Mot de passe root sur MySQL:" PWD_ROOT_MYSQL
+read -s -p "Mot de passe root sur MySQL: " PWD_ROOT_MYSQL
 
 ### Installation du serveur MySQL
 if [[ ! -e /etc/init.d/mysql ]]; then
@@ -29,7 +29,7 @@ fi
 debconf-set-selections <<< "postfix postfix/mailname string $(hostname)"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 
-apt-get -y -q install  mysql-common php5-cgi php5-mcrypt php5-memcache php5-json php5-mysql php-gettext libapache2-mod-php5 curl dovecot-common dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-managesieved postfix postfix-mysql git
+apt-get -y -q install  mysql-common php5-cgi php5-mcrypt php5-memcache php5-json php5-mysql php-gettext libapache2-mod-php5 curl dovecot-common dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-managesieved postfix postfix-mysql git opendkim opendkim-tools
 
 
 
@@ -44,7 +44,7 @@ apt-get -y -q install  mysql-common php5-cgi php5-mcrypt php5-memcache php5-json
 read -p "Voulez-vous configurer vimbadmin (y/n): " INSTALL_VIMBADMIN
 if [[ $INSTALL_VIMBADMIN == "y"  ]]; then
 
-read -e -p "Chemin d'installation:" INSTALL_PATH
+read -e -p "Chemin d'installation: " INSTALL_PATH
 if [[ ! -d $INSTALL_PATH ]]; then
 	mkdir -p $INSTALL_PATH
 	echo "dossier crée"
@@ -66,7 +66,7 @@ if [[ ! -e $INSTALL_PATH/composer.phar  ]]; then
 	php composer.phar install --dev --verbose
 fi
 
-read -s -p "Mot de passe pour l'utilisateur ViMbAdmin sur MySQL:" PWD_VIMBADMIN_MYSQL
+read -s -p "Mot de passe pour l'utilisateur ViMbAdmin sur MySQL: " PWD_VIMBADMIN_MYSQL
 
 #Creation de la base
 mysql -u root -p$PWD_ROOT_MYSQL -e "CREATE DATABASE \`vimbadmin\`;
@@ -80,7 +80,7 @@ sed -i "s/resources.doctrine2.connection.options.password = 'xxx'/resources.doct
 sed -i "s/defaults.mailbox.uid = 2000/defaults.mailbox.uid = 5000/g" $INSTALL_PATH/application/configs/application.ini
 sed -i "s/defaults.mailbox.gid = 2000/defaults.mailbox.gid = 5000/g" $INSTALL_PATH/application/configs/application.ini
 echo -e "\n"
-read -e -p "Chemin vers vmail:" CHEMIN_VMAIL
+read -e -p "Chemin vers vmail: " CHEMIN_VMAIL
 
 sed -i "s#defaults.mailbox.maildir = \"maildir:/srv/vmail/%d/%u/mail:LAYOUT=fs\"#defaults.mailbox.maildir = \"maildir:$CHEMIN_VMAIL/%d/%u/mail:LAYOUT=fs\"/#" $INSTALL_PATH/application/configs/application.ini
 sed -i "s#defaults.mailbox.homedir = \"/srv/vmail/%d/%u\"#defaults.mailbox.homedir = \"$CHEMIN_VMAIL/%d/%u\"#g" $INSTALL_PATH/application/configs/application.ini
@@ -161,7 +161,7 @@ fi
 #                    |_|    \___/|____/ |_| |_|   |___/_/\_\
 #                                                           
 
-read -p "Voulez vous configurer postfix (y/n)" INSTALL_POSTFIX
+read -p "Voulez vous configurer postfix (y/n): " INSTALL_POSTFIX
 if [[ $INSTALL_POSTFIX == "y"  ]]; then
 
 groupadd -g 5000 vmail
@@ -232,6 +232,9 @@ echo "
 smtpd_sasl_security_options = noanonymous
 smtpd_sasl_local_domain = $NOMDOMAIN
 " >> /etc/postfix/main.cf
+
+replace "myhostname =" "#myhostname =" -- /etc/postfix/main.cf
+echo "myhostname = $NOMDOMAIN" >> /etc/postfix/main.cf
 
 #On decommente certaines lignes
 replace "#smtp      inet  n       -       -       -       -       smtpd" "smtp      inet  n       -       -       -       -       smtpd" -- /etc/postfix/master.cf
@@ -377,7 +380,7 @@ echo "
 fi
 service apache2 reload #On recharge apache pour prendre en compte les modifications
 read -p "Voulez vous que je configure roundcube (y/n)" CONF_ROUNDCUBE
-if [[ $CONF_ROUNDCUBE == "y"  ]]; then
+if [[ $CONF_ROUNDCUBE == "y" ]]; then
 
 	read -s -p "Mot de passe pour l'utilisateur Roundcube sur MySQL:" PWD_ROUNDCUBE_MYSQL
 	#Creation de la base
@@ -393,6 +396,7 @@ if [[ $CONF_ROUNDCUBE == "y"  ]]; then
 
 fi
 
+#Sieve
 read -p "Voulez vous installer le plugin managesieve de Roundcube (y/n): " INSTALL_MANAGESIEVE_ROUNDCUBE
 
 if [[ $INSTALL_MANAGESIEVE_ROUNDCUBE == "y" ]]; then
@@ -401,3 +405,48 @@ if [[ $INSTALL_MANAGESIEVE_ROUNDCUBE == "y" ]]; then
 	cp $INSTALL_PATH_ROUNDCUBE/plugins/managesieve/config.inc.php.dist $INSTALL_PATH_ROUNDCUBE/plugins/managesieve/config.inc.php
 fi
 fi #fin du if d'install de roundcube
+
+#                             ____  _  _____ __  __ 
+#                            |  _ \| |/ /_ _|  \/  |
+#                            | | | | ' / | || |\/| |
+#                            | |_| | . \ | || |  | |
+#                            |____/|_|\_\___|_|  |_|
+#
+
+read -p "Voulez vous configurer DKIM (y/n): " CONF_DKIM
+if [[ $CONF_DKIM == "y" ]]; then
+
+	read -p "Nom domaine DKIM: " DOMAINE_DKIM
+	mkdir /etc/opendkim/
+	echo "Domain                  $DOMAINE_DKIM" >> /etc/opendkim.conf
+	echo "SigningTable       /etc/opendkim/SigningTable" >> /etc/opendkim.conf
+	echo "KeyFile           /etc/opendkim/KeyFile" >> /etc/opendkim.conf
+	echo "SOCKET                  inet:8891@localhost" >> /etc/opendkim.conf
+	echo "Selector               mail" >> /etc/opendkim.conf
+
+	echo "
+# DKIM
+#milter_default_action = accept
+#milter_protocol = 2
+#smtpd_milters = inet:localhost:8891
+#non_smtpd_milters = inet:localhost:8891" >> /etc/postfix/main.cf
+	
+	read -p "Entrer tous les domaines séparé par un espace: " TOUS_DOMAINES_DKIM
+	TOUS_DOMAINES_DKIM=$(echo $TOUS_DOMAINES_DKIM | tr " " "\n")
+	while read DOMAINE
+	do
+		cd /etc/opendkim/
+		opendkim-genkey -t -s mail -d $DOMAINE -b 2048
+		mv mail.private $DOMAINE.key
+		mv mail.txt $DOMAINE.dns
+		echo "*@$DOMAINE:$DOMAINE:/etc/opendkim/$DOMAINE.key" >> /etc/opendkim/KeyFile
+		echo "$DOMAINE default._domainkey.$DOMAINE" >> /etc/opendkim/SigningTable
+		cat /etc/opendkim/$DOMAINE.dns
+
+	done <<< "$TOUS_DOMAINES_DKIM"
+	echo -e "
+\e[0;31mOpenDKIM n'est pas activé, pour cela il faut:
+	-Ajouter les valeurs precedentes dans la zone DNS
+	-Decommenter la partie DKIM du fichier /etc/postfix/main.cf
+	-Redemarrer postfix et openDKIM\e[0m"	
+fi
