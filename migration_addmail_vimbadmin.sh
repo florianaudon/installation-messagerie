@@ -1,5 +1,4 @@
 #!/bin/bash
-#	read -e -p "Chemin d'installation de vimbadmin: " INSTALL_PATH	
 fusionner_domaines(){
 	while read DOMAIN
 	do
@@ -43,8 +42,8 @@ fusionner_alias(){
 		unset ALIAS_COUNT
 	done <<< "$(echo "SELECT source,destination FROM virtual_alias_maps;" | mysql -u $db_user -p$db_password $db_name | sed '1d' )"
 }
-#	replace "default_pass_scheme = SHA512-CRYPT" "default_pass_scheme = dovecot:crypt" -- /etc/dovecot/dovecot-sql.conf
-#	replace "defaults.mailbox.password_scheme = \"md5.salted\"" "defaults.mailbox.password_scheme = \"dovecot:crypt\"" $INSTALL_PATH/application/configs/application.ini
+
+
 
 read -e -p "Chemin du fichiers settings_postfix.sh: " SETTING_POSTFIX
 read -s -p "Mot de passe pour l'utilisateur ViMbAdmin sur MySQL: " PWD_VIMBADMIN_MYSQL
@@ -52,9 +51,9 @@ echo -e "\n"
 read -e -p "Chemin vers vmail: " CHEMIN_VMAIL
 source $SETTING_POSTFIX
 
-fusionner_domaines()
-fusionner_mails()
-fusionner_alias()
+fusionner_domaines
+fusionner_mails
+fusionner_alias
 
 echo "Veuillez faire les modifications suviantes:
 application/configs/application.ini de vimbadmin:
@@ -84,7 +83,7 @@ application/configs/application.ini de vimbadmin:
 
 /etc/dovecot/dovecot-sql.conf
 	driver = mysql
-	connect = host=127.0.0.1 user=vimbadmin password=dzaBv8712rv dbname=vimbadmin
+	connect = host=127.0.0.1 user=vimbadmin password=$PWD_VIMBADMIN_MYSQL dbname=vimbadmin
 	default_pass_scheme = CRYPT
 	password_query = SELECT username as user, password FROM mailbox where username = "%u";
 "
