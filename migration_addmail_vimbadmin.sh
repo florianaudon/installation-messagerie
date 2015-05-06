@@ -16,11 +16,11 @@ fusionner_mails(){
 	do
 		NAME=$(echo $MAIL | cut -d"@" -f 1)
 		DOMAIN=$(echo $MAIL | cut -d"@" -f 2)
-		DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u $db_user -p$db_password vimbadmin | sed '1d')
-		echo "INSERT INTO mailbox (username,password,name,active,homedir,maildir,uid,gid,delete_pending,created,Domain_id) VALUES ('$MAIL','$PASSWORD','$NAME','1','$CHEMIN_VMAIL/$DOMAIN/$NAME','maildir:$CHEMIN_VMAIL/$DOMAIN/$NAME/mail:LAYOUT=fs/','5000','5000','0',NOW(),'$DOMAIN_ID');" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
+		DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
+		echo "INSERT INTO mailbox (username,password,name,active,access_restriction,homedir,maildir,uid,gid,delete_pending,created,Domain_id) VALUES ('$MAIL','$PASSWORD','$NAME','1','ALL','$CHEMIN_VMAIL/$DOMAIN/$NAME','maildir:$CHEMIN_VMAIL/$DOMAIN/$NAME/mail:LAYOUT=fs/','5000','5000','0',NOW(),'$DOMAIN_ID');" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
 
 		#Update nombre d'adresse mail
-		MAILBOX_COUNT=$(echo "SELECT mailbox_count FROM domain where domain='$DOMAIN';" | mysql -u $db_user -p$db_password vimbadmin | sed '1d')
+		MAILBOX_COUNT=$(echo "SELECT mailbox_count FROM domain where domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
 		echo "UPDATE domain SET mailbox_count=$((MAILBOX_COUNT+1)) WHERE domain='$DOMAIN'" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
 		echo "INSERT INTO alias (address,goto,active,created,Domain_id) VALUES ('$MAIL','$MAIL','1',NOW(),'$DOMAIN_ID');" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
 		
@@ -33,12 +33,11 @@ fusionner_alias(){
 	while read SOURCE DESTINATION
 	do
 		DOMAIN=$(echo $SOURCE | cut -d"@" -f 2)
-		DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u $db_user -p$db_password vimbadmin | sed '1d')
+		DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
 		echo "INSERT INTO alias (address,goto,active,created,Domain_id) VALUES ('$SOURCE','$DESTINATION','1',NOW(),'$DOMAIN_ID');"  | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
 
-		ALIAS_COUNT=$(echo "SELECT alias_count FROM domain where domain='$DOMAIN';" | mysql -u $db_user -p$db_password vimbadmin | sed '1d')
+		ALIAS_COUNT=$(echo "SELECT alias_count FROM domain where domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
 		echo "UPDATE domain SET alias_count=$((ALIAS_COUNT+1)) WHERE domain='$DOMAIN'" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
-		echo $SOURCE "--"$DESTINATION		
 		unset ALIAS_COUNT
 	done <<< "$(echo "SELECT source,destination FROM virtual_alias_maps;" | mysql -u $db_user -p$db_password $db_name | sed '1d' )"
 }
@@ -85,5 +84,11 @@ application/configs/application.ini de vimbadmin:
 	driver = mysql
 	connect = host=127.0.0.1 user=vimbadmin password=$PWD_VIMBADMIN_MYSQL dbname=vimbadmin
 	default_pass_scheme = CRYPT
-	password_query = SELECT username as user, password FROM mailbox where username = "%u";
+	password_query = SELECT username as user, password FROM mailbox where username = \"%u\";
+
+/etc/dovecot/dovecot.conf
+	protocol lda {
+        	postmaster_address=network@newquest.fr
+	}
+
 "
