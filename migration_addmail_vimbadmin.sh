@@ -50,45 +50,62 @@ echo -e "\n"
 read -e -p "Chemin vers vmail: " CHEMIN_VMAIL
 source $SETTING_POSTFIX
 
-fusionner_domaines
-fusionner_mails
-fusionner_alias
+#fusionner_domaines
+#fusionner_mails
+#fusionner_alias
 
-echo "Veuillez faire les modifications suviantes:
+echo -e "Veuillez faire les modifications suviantes:
+
 application/configs/application.ini de vimbadmin:
-	defaults.mailbox.password_scheme = \"dovecot:crypt\"
+
+\e[00;32mdefaults.mailbox.password_scheme = \"dovecot:crypt\"\e[0m
+
+
 /etc/postfix/mysql-virtual-alias-maps.cf 
-	user = vimbadmin
-	password = $PWD_VIMBADMIN_MYSQL
-	hosts = 127.0.0.1
-	dbname = vimbadmin
-	query = SELECT goto FROM alias WHERE address = '%s' AND active = '1'		
+
+\e[00;32muser = vimbadmin
+password = $PWD_VIMBADMIN_MYSQL
+hosts = 127.0.0.1
+dbname = vimbadmin
+query = SELECT goto FROM alias WHERE address = '%s' AND active = '1'		
+\e[0m
+
 
 /etc/postfix/mysql-virtual-mailbox-domains.cf 
-	user = vimbadmin
-	password = $PWD_VIMBADMIN_MYSQL
-	hosts = 127.0.0.1
-	dbname = vimbadmin
-	query = SELECT domain FROM domain WHERE domain = '%s' AND backupmx = '0' AND active = '1'
+
+\e[00;32muser = vimbadmin
+password = $PWD_VIMBADMIN_MYSQL
+hosts = 127.0.0.1
+dbname = vimbadmin
+query = SELECT domain FROM domain WHERE domain = '%s' AND backupmx = '0' AND active = '1'
+\e[0m
+
 
 /etc/postfix/mysql-virtual-mailbox-maps.cf 
-	user = vimbadmin
-	password = $PWD_VIMBADMIN_MYSQL
-	hosts = 127.0.0.1
-	dbname = vimbadmin
-	table = mailbox
-	select_field = maildir
-	where_field = username
+
+\e[00;32muser = vimbadmin
+password = $PWD_VIMBADMIN_MYSQL
+hosts = 127.0.0.1
+dbname = vimbadmin
+table = mailbox
+select_field = maildir
+where_field = username
+\e[0m
+
 
 /etc/dovecot/dovecot-sql.conf
-	driver = mysql
-	connect = host=127.0.0.1 user=vimbadmin password=$PWD_VIMBADMIN_MYSQL dbname=vimbadmin
-	default_pass_scheme = CRYPT
-	password_query = SELECT username as user, password FROM mailbox where username = \"%u\";
+
+\e[00;32mdriver = mysql
+connect = host=127.0.0.1 user=vimbadmin password=$PWD_VIMBADMIN_MYSQL dbname=vimbadmin
+default_pass_scheme = CRYPT
+password_query = SELECT username as user, password FROM mailbox where username = \"%u\";
+\e[0m
+
 
 /etc/dovecot/dovecot.conf
-	protocol lda {
-        	postmaster_address=network@newquest.fr
-	}
 
+\e[00;32mprotocol lda {
+       	postmaster_address=network@newquest.fr
+}
+\e[0m
 "
