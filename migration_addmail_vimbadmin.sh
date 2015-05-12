@@ -32,13 +32,23 @@ fusionner_alias(){
 
 	while read SOURCE DESTINATION
 	do
-		DOMAIN=$(echo $SOURCE | cut -d"@" -f 2)
-		DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
-		echo "INSERT INTO alias (address,goto,active,created,Domain_id) VALUES ('$SOURCE','$DESTINATION','1',NOW(),'$DOMAIN_ID');"  | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
+		#Si il y a deja un ligne avec cette adresse source (qui doit etre unique)
+		GOTO=$(echo "SELECT goto FROM alias where address='$SOURCE';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
+		if [[ ! -z "$GOTO" ]]; then
+			echo "UPDATE alias SET goto='$GOTO,$DESTINATION' WHERE address='$SOURCE';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
+		
+		else
+
+			DOMAIN=$(echo $SOURCE | cut -d"@" -f 2)
+			DOMAIN_ID=$(echo "SELECT id FROM domain WHERE domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
+			echo "INSERT INTO alias (address,goto,active,created,Domain_id) VALUES ('$SOURCE','$DESTINATION','1',NOW(),'$DOMAIN_ID');"  | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
+		
+		fi
 
 		ALIAS_COUNT=$(echo "SELECT alias_count FROM domain where domain='$DOMAIN';" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin | sed '1d')
 		echo "UPDATE domain SET alias_count=$((ALIAS_COUNT+1)) WHERE domain='$DOMAIN'" | mysql -u vimbadmin -p$PWD_VIMBADMIN_MYSQL vimbadmin
 		unset ALIAS_COUNT
+		unset GOTO
 	done <<< "$(echo "SELECT source,destination FROM virtual_alias_maps;" | mysql -u $db_user -p$db_password $db_name | sed '1d' )"
 }
 
@@ -50,9 +60,9 @@ echo -e "\n"
 read -e -p "Chemin vers vmail: " CHEMIN_VMAIL
 source $SETTING_POSTFIX
 
-#fusionner_domaines
-#fusionner_mails
-#fusionner_alias
+fusionner_domaines
+fusionner_mails
+fusionner_alias
 
 echo -e "Veuillez faire les modifications suviantes:
 
