@@ -321,6 +321,7 @@ userdb {
 
 protocol lda {
         postmaster_address=$LOGIN
+        mail_plugins = sieve
 }
 
 " >> /etc/dovecot/dovecot.conf
