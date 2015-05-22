@@ -137,7 +137,7 @@ REMEMBER_ME_SALT=$(echo -e "$SETUP_WEB" | grep resources.auth.oss.rememberme.sal
 PASSWORD_SALT=$(echo -e "$SETUP_WEB" | grep defaults.mailbox.password_salt | cut -d\" -f 2 )
 
 
-SECURITY_SALT=$(echo ${SECURITY_SALT:0:64}) #On decoupe car il faut une chaine de 65 caractere et des fois il retourne plus. Pourquoi?? Je sais pas!!
+SECURITY_SALT=$(echo ${SECURITY_SALT:0:64}) #On decoupe car il faut une chaine de 65 caractere.
 REMEMBER_ME_SALT=$(echo ${REMEMBER_ME_SALT:0:64})
 PASSWORD_SALT=$(echo ${PASSWORD_SALT:0:64})
 
