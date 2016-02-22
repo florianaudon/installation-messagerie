@@ -199,7 +199,7 @@ virtual_mailbox_domains = mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
 virtual_mailbox_maps = mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
 virtual_uid_maps = static:5000
 virtual_gid_maps = static:5000
-virtual_mailbox_base = /home/vmail
+virtual_mailbox_base = $CHEMIN_VMAIL
 virtual_create_maildirsize = yes
 virtual_maildir_extended = yes
 virtual_transport=dovecot
@@ -275,7 +275,7 @@ password_query = SELECT username as user, password FROM mailbox where username =
 echo "
 # OS: Linux 3.2.13-grsec-xxxx-grs-ipv6-64 x86_64
 auth_mechanisms = plain login
-mail_location = maildir:/home/vmail/%d/%n/Maildir
+mail_location = maildir:$CHEMIN_VMAIL/%d/%n/Maildir
 namespace inbox {
   inbox = yes
   location =
@@ -315,7 +315,7 @@ service auth {
 ssl_cert = </etc/dovecot/dovecot.pem
 ssl_key = </etc/dovecot/private/dovecot.pem
 userdb {
-  args = uid=5000 gid=5000 home=/home/vmail/%d/%n
+  args = uid=5000 gid=5000 home=$CHEMIN_VMAIL/%d/%n
   driver = static
 }
 
